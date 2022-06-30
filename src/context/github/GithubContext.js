@@ -14,29 +14,42 @@ export const GithubProvider = ({children}) => {
 
   const [state, dispatch] = useReducer(githubReducer, initialState)
 
-  // Get initial users (Testing Purposes)
-  const fetchUsers = async () => {
+  // Get Search Results
+  const searchUsers = async (text) => {
     setLoading()
-    const response = await fetch(`${GITHUB_URL}/users`, {
-      headers: {
-        authorization: `token ${GITHUB_TOKEN}`
-      }
+
+    const params = new URLSearchParams({
+      q: text
     })
 
-    const data = await response.json()
+    const response = await fetch(`${GITHUB_URL}/search/users?${params}`)
+
+    // Added a Github Token, but I had to keep changing it because it woul fail every new day.
+    // Adding the token would look something like this:
+    // , {
+    //   headers: {
+    //     authorization: `token ${GITHUB_TOKEN}`
+    //   }
+    // }
+
+    const {items} = await response.json()
 
     dispatch({
       type: 'GET_USERS',
-      payload: data
+      payload: items
     })
   }
+
+  // Clear users from state
+  const clearUsers = () => dispatch({type: 'CLEAR_USERS'})
 
   const setLoading = () => dispatch({type: 'SET_LOADING'})
 
   return <GithubContext.Provider value={{
     users: state.users,
     loading: state.loading,
-    fetchUsers
+    searchUsers,
+    clearUsers
   }}>
     {children}
   </GithubContext.Provider>
